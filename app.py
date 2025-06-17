@@ -14,7 +14,6 @@ st.subheader("Summarize URL")
 
 # Sidebar: API key input
 groq_api_key = st.secrets.get("groq_api_key", "")
-
 with st.sidebar:
     if not groq_api_key:
         groq_api_key = st.text_input("Groq API Key", value="", type="password")
@@ -23,10 +22,7 @@ with st.sidebar:
 generic_url = st.text_input("Enter a YouTube or Website URL")
 
 # Prompt template
-prompt_template = '''
-Provide a summary of the following content in 300 words:
-Content: {text}
-'''
+prompt_template = "Provide a summary of the following content in 300 words:\nContent: {text}"
 prompt = PromptTemplate(template=prompt_template, input_variables=["text"])
 
 # Summarize button logic
@@ -34,13 +30,13 @@ if st.button("Summarize the Content From YT or Website"):
     if not groq_api_key.strip() or not generic_url.strip():
         st.error("❌ Please provide both the API key and the URL.")
     elif not validators.url(generic_url):
-        st.error("❌ Please enter a valid URL (must start with http or https).")
+        st.error("❌ Please enter a valid URL.")
     else:
         try:
             with st.spinner("⏳ Extracting and summarizing content..."):
+                docs = []
                 if "youtube.com" in generic_url:
                     try:
-                        from langchain_community.document_loaders import YoutubeLoader
                         loader = YoutubeLoader.from_youtube_url(generic_url, add_video_info=True)
                         docs = loader.load()
                     except Exception as yt_error:
@@ -51,9 +47,7 @@ if st.button("Summarize the Content From YT or Website"):
                         loader = UnstructuredURLLoader(
                             urls=[generic_url],
                             ssl_verify=False,
-                            headers={
-                                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_5_1) AppleWebKit/537.3 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"
-                            }
+                            headers={"User-Agent": "Mozilla/5.0"}
                         )
                         docs = loader.load()
                         if not docs or not docs[0].page_content.strip():
@@ -66,17 +60,15 @@ if st.button("Summarize the Content From YT or Website"):
                     st.warning("⚠️ No content found at the provided URL. Try another one.")
                     st.stop()
 
+                # Split text into chunks to fit model token limits
+                splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+                split_docs = splitter.split_documents(docs)
+
+                # Initialize LLM
                 llm = ChatGroq(model="llama3-8b-8192", groq_api_key=groq_api_key)
 
-                # Split text to avoid exceeding token limits
-                text_splitter = RecursiveCharacterTextSplitter(
-                    chunk_size=1000,
-                    chunk_overlap=100,
-                )
-                split_docs = text_splitter.split_documents(docs)
-
                 # Summarization chain
-                chain = load_summarize_chain(llm, chain_type="map_reduce", map_prompt=prompt, combine_prompt=prompt)
+                chain = load_summarize_chain(llm, chain_type="stuff", prompt=prompt)
                 output_summary = chain.run(split_docs)
 
                 st.success("✅ Summary Generated:")
