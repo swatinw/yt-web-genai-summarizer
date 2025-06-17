@@ -40,8 +40,12 @@ if st.button("Summarize the Content From YT or Website"):
             with st.spinner("⏳ Extracting and summarizing content..."):
                 # Load content from YouTube or a website
                 if "youtube.com" in generic_url:
-                    loader = YoutubeLoader.from_youtube_url(generic_url, add_video_info=True)
-                    docs = loader.load()
+    try:
+        loader = YoutubeLoader.from_youtube_url(generic_url, add_video_info=True)
+        docs = loader.load()
+    except Exception as yt_error:
+        st.error("⚠️ Failed to load YouTube video. It may be private, age-restricted, or invalid.")
+        st.stop()
                 else:
                     try:
                         loader = UnstructuredURLLoader(
