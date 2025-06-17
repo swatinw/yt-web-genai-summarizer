@@ -76,7 +76,7 @@ if st.button("Summarize the Content From YT or Website"):
                 split_docs = text_splitter.split_documents(docs)
 
                 # Summarization chain
-                chain = load_summarize_chain(llm, chain_type="stuff", prompt=prompt)
+                chain = load_summarize_chain(llm, chain_type="map_reduce", map_prompt=prompt, combine_prompt=prompt)
                 output_summary = chain.run(split_docs)
 
                 st.success("✅ Summary Generated:")
