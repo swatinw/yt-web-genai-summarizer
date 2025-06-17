@@ -30,3 +30,4 @@ lxml
 groq
 pytube>=15.0.0
 tiktoken
+youtube-transcript-api
