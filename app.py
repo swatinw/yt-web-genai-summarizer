@@ -3,7 +3,7 @@ import streamlit as st
 from langchain.prompts import PromptTemplate
 from langchain_groq import ChatGroq
 from langchain.chains.summarize import load_summarize_chain
-from langchain_community.document_loaders import YoutubeLoader, UnstructuredURLLoader, WebBaseLoader
+from langchain_community.document_loaders import UnstructuredURLLoader, WebBaseLoader
 
 # Streamlit app setup
 st.set_page_config(page_title="LangChain: Summarize Text From YT or Website", page_icon="🦜")
@@ -11,10 +11,8 @@ st.title("🦜 LangChain: Summarize Text From YT or Website")
 st.subheader("Summarize URL")
 
 # Sidebar: API key input
-# Try loading Groq API key from Streamlit secrets (for deployment)
 groq_api_key = st.secrets.get("groq_api_key", "")
 
-# If running locally or key isn't set, allow user input
 with st.sidebar:
     if not groq_api_key:
         groq_api_key = st.text_input("Groq API Key", value="", type="password")
@@ -40,13 +38,13 @@ if st.button("Summarize the Content From YT or Website"):
             with st.spinner("⏳ Extracting and summarizing content..."):
                 # Load content from YouTube or a website
                 if "youtube.com" in generic_url:
-    try:
-        from langchain_community.document_loaders import YoutubeLoader
-        loader = YoutubeLoader.from_youtube_url(generic_url, add_video_info=True)
-        docs = loader.load()
-    except Exception as yt_error:
-        st.error("⚠️ YouTube video couldn't be loaded. It may be private, age-restricted, or invalid.")
-        st.stop()
+                    try:
+                        from langchain_community.document_loaders import YoutubeLoader
+                        loader = YoutubeLoader.from_youtube_url(generic_url, add_video_info=True)
+                        docs = loader.load()
+                    except Exception as yt_error:
+                        st.error("⚠️ YouTube video couldn't be loaded. It may be private, age-restricted, or invalid.")
+                        st.stop()
                 else:
                     try:
                         loader = UnstructuredURLLoader(
@@ -63,7 +61,6 @@ if st.button("Summarize the Content From YT or Website"):
                         loader = WebBaseLoader(generic_url)
                         docs = loader.load()
 
-                # Validate extracted content
                 if not docs or not docs[0].page_content.strip():
                     st.warning("⚠️ No content found at the provided URL. Try another one.")
                     st.stop()
