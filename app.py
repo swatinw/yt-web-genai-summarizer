@@ -41,10 +41,11 @@ if st.button("Summarize the Content From YT or Website"):
                 # Load content from YouTube or a website
                 if "youtube.com" in generic_url:
     try:
+        from langchain_community.document_loaders import YoutubeLoader
         loader = YoutubeLoader.from_youtube_url(generic_url, add_video_info=True)
         docs = loader.load()
     except Exception as yt_error:
-        st.error("⚠️ Failed to load YouTube video. It may be private, age-restricted, or invalid.")
+        st.error("⚠️ YouTube video couldn't be loaded. It may be private, age-restricted, or invalid.")
         st.stop()
                 else:
                     try:
