@@ -28,4 +28,4 @@ unstructured
 beautifulsoup4
 lxml
 groq
-pytube
+pytube>=15.0.0
